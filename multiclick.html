@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/0.14.2/react.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/0.14.2/react-dom.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
+    <style type="text/css">
+    * {
+    box-sizing: border-box;
+    }
+
+    img {
+    
+      /*border: 1px solid black;*/
+      padding: 8px;
+      margin: 2px;
+      
+    
+    }
+    img.selected {
+      border: 4px solid green;
+      padding: 4px;
+      opacity: 0.7;
+      margin:2px;
+    
+    }
+    </style>
+
+  </head>
+  <body>
+    <div id="example" ></div>
+    <script type="text/babel">
+    var selected=[];
+    var ajaxRequest = new XMLHttpRequest();
+    var img=[];
+    var start,elapsed;
+    function range(i){
+      var a=[];
+      for(var j=0;j<i;j++){
+        a.push(j);
+      }
+      return a;
+
+    }
+
+    var HelloMessage = React.createClass({
+
+        getInitialState:function(){
+          return{
+            optionPicked:false,
+            images:img,
+            gridtype:"",
+            number:0,
+            correct:"",
+            picked:"none",
+            imagesize:0,
+
+          }
+        },
+        
+        handleClick:function(event){
+          if(event.target.className==""){
+            event.target.className="selected";
+            selected.push(parseInt(event.target.id));
+            console.log(selected);
+            this.setState({optionPicked:true});
+          }
+          else{
+            event.target.className="";
+            var index=selected.indexOf(parseInt(event.target.id));
+            if(index>-1){
+              selected.splice(index,1)
+            if(selected.length<1)
+              this.setState({optionPicked: false});
+            }
+          
+          }
+        },
+        componentDidMount: function() {
+         $.get("http://localhost:8080/", function(result) {
+          this.setState({images:result.images,gridtype:result.gridtype,correct:result.correct,imagesize:result.imagesize});
+          console.log(this.state.correct.length);
+          this.setState({number:this.state.gridtype[0]*this.state.gridtype[2]});
+          console.log(range(this.state));
+
+
+          }.bind(this));
+         start = new Date().getTime();
+         setInterval(function(){
+         elapsed= Math.round((new Date().getTime() - start)/1000);
+         },50)
+        },
+        
+        
+        findWidth:function(){
+          var column=parseInt(this.state.gridtype[2]);
+          return (this.state.imagesize*column+(column-1)*10);
+        },
+        buttonClick:function(event){
+
+          if(event.target.id=="submit"){
+            selected.sort();
+            this.state.correct.sort();
+            if (selected.length!=this.state.correct.length) {
+              this.setState({picked:"wrong"});
+              return;
+            };
+            for(var i=0;i<selected.length;i++){
+              if (selected[i]!=this.state.correct[i]){
+                this.setState({picked:"wrong"});
+                return;
+              }
+            }
+            this.setState({picked:"correct"});
+
+          }
+          else if(event.target.id=="restart"){
+            selected=[];
+            start = new Date().getTime();
+            this.setState({picked:"none"});
+          }
+        },
+        render: function() {
+          
+         if(this.state.picked=="none"){
+          return(
+          <div className="gallery" style={{height:"auto",width:this.findWidth(),textAlign:"center",margin:"10% auto"}}>
+          {range(this.state.number).map(i =>{
+          return(<img src={this.state.images[0]} style={{height:this.state.imagesize,width:this.state.imagesize}} onClick={this.handleClick} id={i}/>) 
+          })
+          }
+          <button className="btn btn-primary pull-center" id="submit" disabled={!this.state.optionPicked} onClick={this.buttonClick} >Submit</button>
+          </div>
+          );
+       }
+          else if(this.state.picked=="correct"){
+          return(
+          <div className="gallery" style={{height:"auto",width:this.findWidth(),textAlign:"center",margin:"10% auto"}}>
+          <h2>Correct Answer!</h2>
+          <h3>Time taken is {elapsed} seconds</h3>
+          <button className="btn btn-primary pull-center">Next Level</button>
+          <button className="btn btn-primary pull-center" onClick={this.buttonClick} id="restart">Try Again</button>
+          </div>
+          );
+        }
+        else if(this.state.picked=="wrong"){
+          return(
+          <div className="gallery" style={{height:"auto",width:this.findWidth(),textAlign:"center",margin:"10% auto"}}>
+          <h2>Sorry! Wrong Answer</h2>
+          <h3>Time taken is {elapsed} seconds</h3>
+          <button className="btn btn-primary pull-center" onClick={this.buttonClick} id="restart">Try Again</button>
+          </div>
+          );
+
+        }
+        },
+      });
+
+      ReactDOM.render(
+        <HelloMessage />,
+        document.getElementById('example')
+      );
+    </script>
+  </body>
+</html>
