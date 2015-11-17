@@ -1,0 +1,22 @@
+{
+  "name": "node-js-getting-started",
+  "version": "0.1.5",
+  "description": "A sample Node.js app using Express 4",
+  "main": "httpserver.js",
+  "scripts": {
+    "start": "node httpserver.js"
+  }, 
+  "engines": {
+   "node": "0.12.7"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jeffpc1993/heroku"
+  },
+  "keywords": [
+    "node",
+    "heroku",
+    "express"
+  ],
+  "license": "MIT"
+}
